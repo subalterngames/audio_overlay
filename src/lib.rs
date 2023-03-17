@@ -55,7 +55,7 @@ use std::cmp::PartialOrd;
 /// 
 /// # Panics
 /// 
-/// It is technically possible for this function to panic if the source arrays are of type f64 because the overlaid value could exceed f64::MAX or f64::MIN. But this would be a very unusual audio array in the first place.
+/// It is technically possible for this function to panic if the source arrays are of type f64 because an overlaid value could exceed f64::MAX or f64::MIN. But this would be a very unusual audio array in the first place.
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
     where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U> + From<u8>,
     T: Add<Output = T>,
