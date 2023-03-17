@@ -8,7 +8,6 @@ keywords = ["wav", "wave", "audio"]
 categories = ["multimedia::encoding", "multimedia::audio"]
 homepage = "https://github.com/subalterngames/audio_overlay"
 repository = "https://github.com/subalterngames/audio_overlay"
-documentation = "https://docs.rs/audio_overlay"
 license = "MIT"
 exclude = ["examples/*"]
 

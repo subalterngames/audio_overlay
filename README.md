@@ -2,7 +2,7 @@
 
 Overlay audio samples from one array onto another. You can optionally expand the destination array.
 
-The overlay function can be used for i8, i16, i32, i64, and f32.
+The overlay function can be used for i8, i16, i32, i64, f32, and f64.
 
 ## Example
 
@@ -18,7 +18,7 @@ fn main()
 {
     // Set the framerate.
     let framerate: u32 = 44100;
-    
+
     // Load the audio clips.
     // Source: https://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_2.ogg
     let src: Vec<i16> = hound::WavReader::open("src.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
