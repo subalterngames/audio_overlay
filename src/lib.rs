@@ -120,17 +120,16 @@ fn clamp<T>(value: T, min: T, max: T) -> T
     }
 }
 
-/// A value that can be overlaid onto another.
-/// 
-/// When two values are overlaid, they are added together and clamped to min/max values.
-/// 
-/// For integer types, we need to cast the values to a higher bit count, e.g. i16 to i32, before adding them, to prevent an overflow error. Values are clamped to the min/max values of the original type, e.g. i16::MAX.
-/// 
-/// For float types, it's assumed that the values are between -1.0 and 1.0. They are added and the sum is clamped to be between -1.0 and 1.0.
+/// Overlay values onto each other. The values are are added together and clamped to min/max values.
 pub trait Overlayable<T, U>
     where T: Copy + PartialOrd,
     U: Copy + PartialOrd
 {
+    /// Add two values together, clamped between min/max values.
+    /// 
+    /// For integer types, we need to cast the values to a higher bit count, e.g. i16 to i32, before adding them, to prevent an overflow error. Values are clamped to the min/max values of the original type, e.g. i16::MAX.
+    ///  
+    /// For float types, it's assumed that the values are between -1.0 and 1.0. They are added and the sum is clamped to be between -1.0 and 1.0.
     fn overlay(a: T, b: T, min: U, max: U) -> T;
 }
 
@@ -182,7 +181,11 @@ impl Overlayable<f64, f64> for f64
     }
 }
 
-/// This is used by `overlay()` to get the minimum and maximum values of a given type, e.g. `i8::min()` returns `i8::MIN` while `f32::min()` returns `-1.0`.
+/// This is used by `overlay()` to get the minimum and maximum values of a given type for the purposes of overlaying data.
+/// 
+/// For integer types, this is the min/max value of the type one bit count less than this one. For example, `i16::min()` returns `i8::MIN`.
+/// 
+/// For float types, the min/max value is -1.0 and 1.0.
 pub trait ValueBounds<T>
     where T: Copy + PartialOrd
 {
@@ -192,29 +195,16 @@ pub trait ValueBounds<T>
     fn max() -> T;
 }
 
-impl ValueBounds<i8> for i8
-{
-    fn min() -> i8
-    {
-        i8::MIN
-    }
-
-    fn max() -> i8
-    {
-        i8::MAX
-    }
-}
-
 impl ValueBounds<i16> for i16
 {
     fn min() -> i16
     {
-        i16::MIN
+        i8::MIN as i16
     }
 
     fn max() -> i16
     {
-        i16::MAX
+        i8::MAX as i16
     }
 }
 
@@ -222,12 +212,12 @@ impl ValueBounds<i32> for i32
 {
     fn min() -> i32
     {
-        i32::MIN
+        i16::MIN as i32
     }
 
     fn max() -> i32
     {
-        i32::MAX
+        i16::MAX as i32
     }
 }
 
@@ -235,13 +225,26 @@ impl ValueBounds<i64> for i64
 {
     fn min() -> i64
     {
-        i64::MIN
+        i32::MIN as i64
     }
 
     fn max() -> i64
     {
-        i64::MAX
+        i32::MAX as i64
     }
+}
+
+impl ValueBounds<i128> for i128
+{
+    fn min() -> i128
+    {
+        i64::MIN as i128
+    }
+
+    fn max() -> i128
+    {
+        i64::MAX as i128
+    } 
 }
 
 impl ValueBounds<f32> for f32
