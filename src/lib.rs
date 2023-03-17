@@ -94,7 +94,6 @@ pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, pus
         // Overlay the sample.
         else 
         {
-
             dst[index] = U::cast(fbound(dst[index].cast() + v.cast(), min, max));
         }
         // Increment the index.
