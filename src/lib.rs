@@ -2,8 +2,6 @@
 //! 
 //! The overlay function can be used for i8, i16, i32, i64, and f32.
 //! 
-//! No requirements other than std!
-//! 
 //! # Example
 //! 
 //! ```rust
@@ -51,11 +49,11 @@ use std::cmp::PartialOrd;
 /// 
 /// * `src` - A slice of type T. This array will be overlaid into `dst`.
 /// * `dst` - A mutable vec of type T. This will be modified, with `src` being overlaid into `dst`.
-/// * `time` - The start time in seconds at which `asrc` should be overlaid into `dst`.
+/// * `time` - The start time in seconds at which `src` should be overlaid into `dst`.
 /// * `framerate` - The framerate of `src` and `dst`, e.g. 44100. This will be used to convert `time` into an index value.
 /// * `push` - Often, the end time of `src` will exceed the end time of `dst`. If `push == true`, samples from `src` past the original end time of `dst` will be pushed to `dst`, lengthening the waveform. If `push == false`, this function will end at the current length of `dst` and won't modify its length.
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
-    where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U>,
+    where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U> + From<u8>,
     T: Add<Output = T>,
     U: Copy + PartialOrd + ValueBounds<U> + CastableDown<U, T> + Add,
     U: Add<Output = U>
@@ -66,6 +64,7 @@ pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, pus
     // Get the minimum and maximum values.
     let min: U = U::min();
     let max: U = U::max();
+    let zero: T = T::from(0);
     let mut pushing = false;
     for &v in src
     {
@@ -73,9 +72,10 @@ pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, pus
         if pushing
         {
             dst.push(v);
+            continue;
         }
         // If the index is greater than the length of dst, then we need to either stop here or start pushing.
-        else if index >= len
+        if index >= len
         {
             // Don't push it.
             if !push
@@ -84,6 +84,12 @@ pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, pus
             }
             pushing = true;
             dst.push(v);
+            continue;
+        }
+        // If there is no data at this index, set it to v rather than doing a lot of casting.
+        if dst[index] == zero
+        {
+            dst[index] = v;
         }
         // Overlay the sample.
         else 
