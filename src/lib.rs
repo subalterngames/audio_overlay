@@ -32,7 +32,6 @@
 //! }
 //! ```
 
-use std::ops::Add;
 use std::cmp::PartialOrd;
 
 /// Overlay audio samples from one array onto another. You can optionally expand the destination array.
@@ -55,12 +54,10 @@ use std::cmp::PartialOrd;
 /// 
 /// # Panics
 /// 
-/// It is technically possible for this function to panic if the source arrays are of type f64 because an overlaid value could exceed f64::MAX or f64::MIN. But this would be a very unusual audio array in the first place.
+/// It is technically possible for this function to panic if the source arrays are of type f32 or f64 because an overlaid value could exceed f32::MIN or f32::MAX, or f64::MIN or f64::MAX, respectively. But this would be a very unusual audio array in the first place. We're assuming that all values in `src` and `dst` are between -1.0 and 1.0.
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
-    where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U> + From<u8>,
-    T: Add<Output = T>,
-    U: Copy + PartialOrd + ValueBounds<U> + CastableDown<U, T> + Add,
-    U: Add<Output = U>
+    where T: Copy + PartialOrd + Overlayable<T, U> + From<u8>,
+    U: Copy + PartialOrd + ValueBounds<U>
 {
     // Get the start index.
     let mut index: usize = (time * framerate as f64) as usize;
@@ -98,15 +95,15 @@ pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, pus
         // Overlay the sample.
         else 
         {
-            dst[index] = U::cast(fbound(dst[index].cast() + v.cast(), min, max));
+            dst[index] = T::overlay(dst[index], v, min, max);
         }
         // Increment the index.
         index += 1;
     }
 }
 
-// Source: https://github.com/python/cpython/blob/65fb7c4055f280caaa970939d16dd947e6df8a8d/Modules/audioop.c#L44
-fn fbound<T>(value: T, min: T, max: T) -> T
+// Clamp the value between a min and max.
+fn clamp<T>(value: T, min: T, max: T) -> T
     where T: PartialOrd
 {
     if value > max
@@ -123,7 +120,69 @@ fn fbound<T>(value: T, min: T, max: T) -> T
     }
 }
 
-/// This is used by `overlay()` to get the minimum and maximum values of a given type.
+/// A value that can be overlaid onto another.
+/// 
+/// When two values are overlaid, they are added together and clamped to min/max values.
+/// 
+/// For integer types, we need to cast the values to a higher bit count, e.g. i16 to i32, before adding them, to prevent an overflow error. Values are clamped to the min/max values of the original type, e.g. i16::MAX.
+/// 
+/// For float types, it's assumed that the values are between -1.0 and 1.0. They are added and the sum is clamped to be between -1.0 and 1.0.
+pub trait Overlayable<T, U>
+    where T: Copy + PartialOrd,
+    U: Copy + PartialOrd
+{
+    fn overlay(a: T, b: T, min: U, max: U) -> T;
+}
+
+impl Overlayable<i8, i16> for i8
+{
+    fn overlay(a: i8, b: i8, min: i16, max: i16) -> i8 
+    {
+        clamp((a + b) as i16, min, max) as i8
+    }
+}
+
+impl Overlayable<i16, i32> for i16
+{
+    fn overlay(a: i16, b: i16, min: i32, max: i32) -> i16 
+    {
+        clamp((a + b) as i32, min, max) as i16
+    }
+}
+
+impl Overlayable<i32, i64> for i32
+{
+    fn overlay(a: i32, b: i32, min: i64, max: i64) -> i32 
+    {
+        clamp((a + b) as i64, min, max) as i32
+    }
+}
+
+impl Overlayable<i64, i128> for i64
+{
+    fn overlay(a: i64, b: i64, min: i128, max: i128) -> i64 
+    {
+        clamp((a + b) as i128, min, max) as i64
+    }
+}
+
+impl Overlayable<f32, f32> for f32
+{
+    fn overlay(a: f32, b: f32, min: f32, max: f32) -> f32
+    {
+        clamp(a + b, min, max)
+    }
+}
+
+impl Overlayable<f64, f64> for f64
+{
+    fn overlay(a: f64, b: f64, min: f64, max: f64) -> f64
+    {
+        clamp(a + b, min, max)
+    }
+}
+
+/// This is used by `overlay()` to get the minimum and maximum values of a given type, e.g. `i8::min()` returns `i8::MIN` while `f32::min()` returns `-1.0`.
 pub trait ValueBounds<T>
     where T: Copy + PartialOrd
 {
@@ -189,125 +248,24 @@ impl ValueBounds<f32> for f32
 {
     fn min() -> f32
     {
-        f32::MIN
+        -1.0
     }
 
     fn max() -> f32
     {
-        f32::MAX
+        1.0
     }
 }
 
-/// This is used by `overlay()` to cast a value to a higher type, e.g. i16 to i32, to prevent overflow errors.
-pub trait CastableUp<T, U>
-    where T: Copy + PartialOrd,
-    U: Copy + PartialOrd
+impl ValueBounds<f64> for f64
 {
-    /// Convert this value to type U.
-    fn cast(self) -> U;
-}
-
-impl CastableUp<i8, i16> for i8
-{
-    fn cast(self) -> i16 
+    fn min() -> f64
     {
-        self as i16
+        -1.0
     }
-}
 
-impl CastableUp<i16, i32> for i16
-{
-    fn cast(self) -> i32 
+    fn max() -> f64
     {
-        self as i32
-    }
-}
-
-impl CastableUp<i32, i64> for i32
-{
-    fn cast(self) -> i64 
-    {
-        self as i64
-    }
-}
-
-impl CastableUp<i64, i128> for i64
-{
-    fn cast(self) -> i128 
-    {
-        self as i128
-    }
-}
-
-impl CastableUp<f32, f64> for f32
-{
-    fn cast(self) -> f64 
-    {
-        self as f64
-    }
-}
-
-impl CastableUp<f64, f64> for f64
-{
-    fn cast(self) -> f64
-    {
-        self
-    }
-}
-
-/// This is used by `overlay()` to cast a value to a lower type, e.g. i32 to i16, once we're done dealing with potential overflow errors.
-pub trait CastableDown<T, U>
-    where T: Copy + PartialOrd,
-    U: Copy + PartialOrd
-{
-    /// Convert the value to type U.
-    fn cast(value: T) -> U;
-}
-
-impl CastableDown<i16, i8> for i16
-{
-    fn cast(value: i16) -> i8
-    {
-        value as i8
-    }
-}
-
-impl CastableDown<i32, i16> for i32
-{
-    fn cast(value: i32) -> i16 
-    {
-        value as i16
-    }
-}
-
-impl CastableDown<i64, i32> for i64
-{
-    fn cast(value: i64) -> i32 
-    {
-        value as i32
-    }
-}
-
-impl CastableDown<i128, i64> for i128
-{
-    fn cast(value: i128) -> i64 
-    {
-        value as i64
-    }
-}
-
-impl CastableDown<f64, f32> for f64
-{
-    fn cast(value: f64) -> f32 
-    {
-        value as f32
-    }
-}
-
-impl CastableDown<f64, f64> for f64
-{
-    fn cast(value: f64) -> f64
-    {
-        value
+        1.0
     }
 }
