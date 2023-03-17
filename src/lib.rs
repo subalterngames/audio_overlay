@@ -55,6 +55,8 @@ use std::cmp::PartialOrd;
 /// # Panics
 /// 
 /// It is technically possible for this function to panic if the source arrays are of type f32 or f64 because an overlaid value could exceed f32::MIN or f32::MAX, or f64::MIN or f64::MAX, respectively. But this would be a very unusual audio array in the first place. We're assuming that all values in `src` and `dst` are between -1.0 and 1.0.
+/// 
+/// For integer types such as i16, the function *won't* panic due to overflow errors because summed values will be cast to a type with a higher bit count, added, and recast as the original type (see [Overlayable]).
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
     where T: Copy + PartialOrd + Overlayable<T, U> + From<u8>,
     U: Copy + PartialOrd + ValueBounds<U>
