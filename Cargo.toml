@@ -1,6 +1,6 @@
 [package]
 name = "audio_overlay"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Esther Alter <subalterngames@gmail.com>"]
 description = "Overlay one audio sample array onto another"
@@ -9,7 +9,7 @@ categories = ["multimedia::encoding", "multimedia::audio"]
 homepage = "https://github.com/subalterngames/audio_overlay"
 repository = "https://github.com/subalterngames/audio_overlay"
 documentation = "https://docs.rs/audio_overlay"
-license-file = "LICENSE"
+license = "MIT"
 exclude = ["examples/*"]
 
 [dependencies]
