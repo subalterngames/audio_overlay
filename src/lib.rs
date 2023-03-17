@@ -37,7 +37,7 @@ use std::cmp::PartialOrd;
 
 /// Overlay audio samples from one array onto another. You can optionally expand the destination array.
 /// 
-/// This function can be used for i8, i16, i32, i64, and f32.
+/// This function can be used for i8, i16, i32, i64, f32, and f64.
 /// 
 /// This function assumes that both the source and destination arrays are a single channel of audio and have the same framerate and sample width.
 /// 
@@ -52,6 +52,10 @@ use std::cmp::PartialOrd;
 /// * `time` - The start time in seconds at which `src` should be overlaid into `dst`.
 /// * `framerate` - The framerate of `src` and `dst`, e.g. 44100. This will be used to convert `time` into an index value.
 /// * `push` - Often, the end time of `src` will exceed the end time of `dst`. If `push == true`, samples from `src` past the original end time of `dst` will be pushed to `dst`, lengthening the waveform. If `push == false`, this function will end at the current length of `dst` and won't modify its length.
+/// 
+/// # Panics
+/// 
+/// It is technically possible for this function to panic if the source arrays are of type f64 because the overlaid value could exceed f64::MAX or f64::MIN. But this would be a very unusual audio array in the first place.
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
     where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U> + From<u8>,
     T: Add<Output = T>,
@@ -243,6 +247,14 @@ impl CastableUp<f32, f64> for f32
     }
 }
 
+impl CastableUp<f64, f64> for f64
+{
+    fn cast(self) -> f64
+    {
+        self
+    }
+}
+
 /// This is used by `overlay()` to cast a value to a lower type, e.g. i32 to i16, once we're done dealing with potential overflow errors.
 pub trait CastableDown<T, U>
     where T: Copy + PartialOrd,
@@ -289,5 +301,13 @@ impl CastableDown<f64, f32> for f64
     fn cast(value: f64) -> f32 
     {
         value as f32
+    }
+}
+
+impl CastableDown<f64, f64> for f64
+{
+    fn cast(value: f64) -> f64
+    {
+        value
     }
 }
