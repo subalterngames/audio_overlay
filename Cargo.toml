@@ -10,6 +10,5 @@ homepage = "https://github.com/subalterngames/audio_overlay"
 repository = "https://github.com/subalterngames/audio_overlay"
 documentation = "https://docs.rs/audio_overlay"
 license-file = "LICENSE"
-exclude = ["examples/*"]
 
 [dependencies]
