@@ -1,3 +1,39 @@
+//! Overlay audio samples from one array onto another. You can optionally expand the destination array.
+//! 
+//! The overlay function can be used for i8, i16, i32, i64, and f32.
+//! 
+//! No requirements other than std!
+//! 
+//! # Example
+//! 
+//! ```rust
+//! use rodio::{OutputStream, Sink};
+//! use rodio::buffer::SamplesBuffer;
+//! use hound;
+//! use audio_overlay::overlay;
+//! 
+//! fn main()
+//! {
+//!     // Set the framerate.
+//!     let framerate: u32 = 44100;
+//!     // Load the audio clips.
+//!     // Source: https://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_2.ogg
+//!     let src: Vec<i16> = hound::WavReader::open("src.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
+//!     // Source: https://archive.org/download/airship1904/airship1904.ogg
+//!     let mut dst: Vec<i16> = hound::WavReader::open("dst.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
+//! 
+//!     // Overlay the audio clips. The src clip will start 1.0 seconds after dst begins.
+//!     overlay(src.as_slice(), &mut dst, 1.0, framerate, true);
+//! 
+//!     // Play the audio clips. Source: https://docs.rs/rodio/latest/rodio
+//!     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+//!     let source = SamplesBuffer::new(1, framerate, dst);
+//!     let sink = Sink::try_new(&stream_handle).unwrap();
+//!     sink.append(source);
+//!     sink.sleep_until_end();
+//! }
+//! ```
+
 use std::ops::Add;
 use std::cmp::PartialOrd;
 
@@ -7,15 +43,17 @@ use std::cmp::PartialOrd;
 /// 
 /// This function assumes that both the source and destination arrays are a single channel of audio and have the same framerate and sample width.
 /// 
+/// For multi-channel audio, run `overlay()` for each channel.
+/// 
+/// Audio mixing algorithm source: <https://github.com/python/cpython/blob/main/Modules/audioop.c#L1083>
+/// 
 /// # Arguments
 /// 
 /// * `src` - A slice of type T. This array will be overlaid into `dst`.
 /// * `dst` - A mutable vec of type T. This will be modified, with `src` being overlaid into `dst`.
-/// * `time` - The start time in seconds at which `src` should be overlaid into `dst`.
+/// * `time` - The start time in seconds at which `asrc` should be overlaid into `dst`.
 /// * `framerate` - The framerate of `src` and `dst`, e.g. 44100. This will be used to convert `time` into an index value.
 /// * `push` - Often, the end time of `src` will exceed the end time of `dst`. If `push == true`, samples from `src` past the original end time of `dst` will be pushed to `dst`, lengthening the waveform. If `push == false`, this function will end at the current length of `dst` and won't modify its length.
-/// 
-/// Audio mixing algorithm source: https://github.com/python/cpython/blob/main/Modules/audioop.c#L1083
 pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
     where T: Copy + Add + PartialOrd + ValueBounds<T> + CastableUp<T, U>,
     T: Add<Output = T>,

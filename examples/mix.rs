@@ -1,7 +1,7 @@
 use rodio::{OutputStream, Sink};
 use rodio::buffer::SamplesBuffer;
 use hound;
-use audio_overlay;
+use audio_overlay::overlay;
 
 fn main()
 {
@@ -13,7 +13,7 @@ fn main()
     // Source: https://archive.org/download/airship1904/airship1904.ogg
     let mut dst: Vec<i16> = hound::WavReader::open("dst.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
 
-    // Overlay the audio clips.
+    // // Overlay the audio clips. The src clip will start 1.0 seconds after dst begins.
     overlay(src.as_slice(), &mut dst, 1.0, framerate, true);
 
     // Play the audio clips. Source: https://docs.rs/rodio/latest/rodio/
