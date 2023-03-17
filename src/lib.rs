@@ -16,6 +16,7 @@
 //!     let framerate: u32 = 44100;
 //!     // Load the audio clips.
 //!     // Source: https://archive.org/download/NasaApollo11OnboardRecordings/11_highlight_2.ogg
+//! 
 //!     let src: Vec<i16> = hound::WavReader::open("src.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
 //!     // Source: https://archive.org/download/airship1904/airship1904.ogg
 //!     let mut dst: Vec<i16> = hound::WavReader::open("dst.wav").unwrap().samples::<i16>().map(|s| s.unwrap()).collect::<Vec<i16>>();
