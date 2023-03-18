@@ -4,9 +4,13 @@ Overlay audio samples from one array onto another. You can optionally expand the
 
 The overlay function can be used for i8, i16, i32, i64, f32, and f64.
 
+## Changelog
+
+[Read this.](changelog.md)
+
 ## Example
 
-See: [mix.rs](examples/mix.rs)
+[Example implementation here.](examples/src/main.rs) This example relies on two crates that aren't dependencies of `audio_overlay`: `hound` (to open .wav files and convert them into vecs) and `rodio` (to play the audio sample buffer).
 
 ```rust
 use rodio::{OutputStream, Sink};

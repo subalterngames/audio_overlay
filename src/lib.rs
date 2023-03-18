@@ -51,44 +51,48 @@ use std::cmp::PartialOrd;
 /// * `dst` - A mutable vec of type T. This will be modified, with `src` being overlaid into `dst`.
 /// * `time` - The start time in seconds at which `src` should be overlaid into `dst`.
 /// * `framerate` - The framerate of `src` and `dst`, e.g. 44100. This will be used to convert `time` into an index value.
-/// * `push` - Often, the end time of `src` will exceed the end time of `dst`. If `push == true`, samples from `src` past the original end time of `dst` will be pushed to `dst`, lengthening the waveform. If `push == false`, this function will end at the current length of `dst` and won't modify its length.
+/// * `add` - Often, the end time of `src` will exceed the end time of `dst`. If `add == true`, samples from `src` past the original end time of `dst` will be pushed to `dst`, lengthening the waveform. If `add == false`, this function will end at the current length of `dst` and won't modify its length.
 /// 
 /// # Panics
 /// 
 /// It is technically possible for this function to panic if the source arrays are of type f32 or f64 because an overlaid value could exceed f32::MIN or f32::MAX, or f64::MIN or f64::MAX, respectively. But this would be a very unusual audio array in the first place. We're assuming that all values in `src` and `dst` are between -1.0 and 1.0.
 /// 
 /// For integer types such as i16, the function *won't* panic due to overflow errors because summed values will be cast to a type with a higher bit count, added, and recast as the original type (see [Overlayable]).
-pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, push: bool)
+pub fn overlay<T, U>(src: &[T], dst: &mut Vec<T>, time: f64, framerate: u32, add: bool)
     where T: Copy + PartialOrd + Overlayable<T, U> + From<u8>,
     U: Copy + PartialOrd + ValueBounds<U>
 {
     // Get the start index.
     let mut index: usize = (time * framerate as f64) as usize;
+    // The current length of dst.
     let len: usize = dst.len();
+    // This will be used to fill dst with zeros if needed.
+    let zero: T = T::from(0);
+    // The start time is after the end of dst.
+    if index >= len
+    {
+        if add 
+        {
+            // Add zeros up to the start time.
+            dst.extend(vec![zero; index - len]);
+            // Add src.
+            dst.extend(src.iter().cloned());
+        }
+        return;
+    }
     // Get the minimum and maximum values.
     let min: U = U::min();
     let max: U = U::max();
-    let zero: T = T::from(0);
-    let mut pushing = false;
-    for &v in src
+    for (i, &v) in src.iter().enumerate()
     {
-        // Append instead of overlaying.
-        if pushing
-        {
-            dst.push(v);
-            continue;
-        }
-        // If the index is greater than the length of dst, then we need to either stop here or start pushing.
+        // If the index is greater than the length of dst, then we need to either stop here or append.
         if index >= len
         {
-            // Don't push it.
-            if !push
+            if add
             {
-                return;
+                dst.extend(src[i..].iter().cloned());
             }
-            pushing = true;
-            dst.push(v);
-            continue;
+            return;
         }
         // If there is no data at this index, set it to v rather than doing a lot of casting.
         if dst[index] == zero
@@ -186,7 +190,7 @@ impl Overlayable<f64, f64> for f64
 
 /// This is used by `overlay()` to get the minimum and maximum values of a given type for the purposes of overlaying data.
 /// 
-/// For integer types, this is the min/max value of the type one bit count less than this one. For example, `i16::min()` returns `i8::MIN`.
+/// For integer types, this is the min/max value of the type one bit count less than this one. For example, `i16::min()` returns `i8::MIN as i16`.
 /// 
 /// For float types, the min/max value is -1.0 and 1.0.
 pub trait ValueBounds<T>
