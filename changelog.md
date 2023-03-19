@@ -1,3 +1,7 @@
+# 0.1.3
+
+- Fixed: Wrong URL for the example in the README.
+
 # 0.1.2
 
 - Fixed: If `time` is greater than the duration of `dst`, `src` will still be appended immediately after `dst`. Now, `dst` will be filled with zeros up to `time`.

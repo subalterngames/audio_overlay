@@ -10,7 +10,7 @@ The overlay function can be used for i8, i16, i32, i64, f32, and f64.
 
 ## Example
 
-[Example implementation here.](examples/src/main.rs) This example relies on two crates that aren't dependencies of `audio_overlay`: `hound` (to open .wav files and convert them into vecs) and `rodio` (to play the audio sample buffer).
+[Example implementation here.](https://github.com/subalterngames/audio_overlay/tree/main/examples/mix) This example relies on two crates that aren't dependencies of `audio_overlay`: `hound` (to open .wav files and convert them into vecs) and `rodio` (to play the audio sample buffer).
 
 ```rust
 use rodio::{OutputStream, Sink};
