@@ -35,6 +35,15 @@
 
 use std::cmp::PartialOrd;
 
+const I8_MAX: i16 = i8::MAX as i16;
+const I8_MIN: i16 = i8::MIN as i16;
+const I16_MAX: i32 = i16::MAX as i32;
+const I16_MIN: i32 = i16::MIN as i32;
+const I32_MAX: i64 = i32::MAX as i64;
+const I32_MIN: i64 = i32::MIN as i64;
+const I64_MAX: i128 = i64::MAX as i128;
+const I64_MIN: i128 = i64::MIN as i128;
+
 /// Overlay audio samples from one array onto another. You can optionally expand the destination array.
 /// 
 /// This function can be used for i8, i16, i32, i64, f32, and f64.
@@ -206,12 +215,12 @@ impl ValueBounds<i16> for i16
 {
     fn min() -> i16
     {
-        i8::MIN as i16
+        I8_MIN
     }
 
     fn max() -> i16
     {
-        i8::MAX as i16
+        I8_MAX
     }
 }
 
@@ -219,12 +228,12 @@ impl ValueBounds<i32> for i32
 {
     fn min() -> i32
     {
-        i16::MIN as i32
+        I16_MIN
     }
 
     fn max() -> i32
     {
-        i16::MAX as i32
+        I16_MAX
     }
 }
 
@@ -232,12 +241,12 @@ impl ValueBounds<i64> for i64
 {
     fn min() -> i64
     {
-        i32::MIN as i64
+        I32_MIN
     }
 
     fn max() -> i64
     {
-        i32::MAX as i64
+        I32_MAX
     }
 }
 
@@ -245,12 +254,12 @@ impl ValueBounds<i128> for i128
 {
     fn min() -> i128
     {
-        i64::MIN as i128
+        I64_MIN
     }
 
     fn max() -> i128
     {
-        i64::MAX as i128
+        I64_MAX
     } 
 }
 

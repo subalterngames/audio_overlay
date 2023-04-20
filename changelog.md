@@ -1,3 +1,7 @@
+# 0.1.4
+
+- Made all integer min/max values constants instead of casting integer types on the fly.
+
 # 0.1.3
 
 - Fixed: Wrong URL for the example in the README.
