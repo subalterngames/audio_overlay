@@ -32,9 +32,9 @@ checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "audio_overlay"
-version = "0.1.1"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7222a7c65e278604e945110eea26165ccd08ce3a87b59d0389b8284a590824d8"
+checksum = "1e8d0aacb80d588362e9d58711d925948b86fd7ea1070c224d171b2380529d74"
 
 [[package]]
 name = "autocfg"

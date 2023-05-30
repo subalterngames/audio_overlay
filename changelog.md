@@ -1,3 +1,7 @@
+# 0.1.5
+
+- Cleaned up the code format and clippy warnings.
+
 # 0.1.4
 
 - Made all integer min/max values constants instead of casting integer types on the fly.
